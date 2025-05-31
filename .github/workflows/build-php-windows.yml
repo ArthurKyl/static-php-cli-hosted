@@ -13,14 +13,10 @@ jobs:
       fail-fast: false
       matrix:
         php-version:
-          - "8.1"
-          - "8.2"
-          - "8.3"
           - "8.4"
         runner:
           - "windows-latest"
         combination:
-          - spc-min
           - spc-max
     
     steps:
@@ -97,7 +93,7 @@ jobs:
           ${{ steps.process-env.outputs.CMD }} doctor --auto-fix
           ${{ steps.process-env.outputs.CMD }} install-pkg upx
           
-          ${{ steps.process-env.outputs.CMD }} build --build-cli --build-micro "${{ steps.process-env.outputs.EXTENSIONS }}" --debug --with-upx-pack
+          ${{ steps.process-env.outputs.CMD }} build --build-cli --build-micro "${{ steps.process-env.outputs.EXTENSIONS }}" --with-libs="freetype,libjpeg,libwebp" --debug --with-upx-pack
 
           $PHPVER = ${{ steps.process-env.outputs.CMD }} dev:php-ver
           New-Item -ItemType Directory -Force -Path dist
@@ -112,15 +108,15 @@ jobs:
         run: |
           echo -e "# Note\n\nCurrent distribution uses extensions:\n\n${{ steps.process-env.outputs.EXTENSIONS }}\n\nUsing compile command:\n\n  bin/spc build --build-cli --build-micro \"${{ steps.process-env.outputs.EXTENSIONS }}\" --debug --with-upx-pack" > dist/README.txt
           
-      - name: "Deploy to self-hosted OSS"
-        uses: static-php/upload-s3-action@v1.0.0
-        with:
-          aws_key_id: ${{ secrets.AWS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_bucket: ${{ secrets.AWS_BUCKET }}
-          source_dir: "dist/"
-          destination_dir: static-php-cli/windows/${{ matrix.combination }}/
-          endpoint: ${{ secrets.AWS_ENDPOINT }}
+      # - name: "Deploy to self-hosted OSS"
+      #   uses: static-php/upload-s3-action@v1.0.0
+      #   with:
+      #     aws_key_id: ${{ secrets.AWS_KEY_ID }}
+      #     aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws_bucket: ${{ secrets.AWS_BUCKET }}
+      #     source_dir: "dist/"
+      #     destination_dir: static-php-cli/windows/${{ matrix.combination }}/
+      #     endpoint: ${{ secrets.AWS_ENDPOINT }}
 
       - name: "Upload Artifact"
         uses: actions/upload-artifact@v4
@@ -128,6 +124,5 @@ jobs:
           name: php-${{ matrix.php-version }}-windows-${{ matrix.combination }}
           path: |
             buildroot/bin/php.exe
-            buildroot/bin/micro.sfx
           if-no-files-found: error
           
